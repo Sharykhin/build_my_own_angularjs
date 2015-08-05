@@ -14,32 +14,42 @@ function Scope() {
 }
 
 Scope.prototype.$watch = function(watchFn, listenerFn, valueEq) {
+	var self = this;
 	var watcher = {
 		watchFn: watchFn,
 		listenerFn: listenerFn || function() {},
 		valueEq: !!valueEq,
 		last: initWatchVal
 	};
-
-	this.$$watchers.push(watcher);
+	self.$$watchers.unshift(watcher);
 	this.$$lastDirtyWatch = null;
+	return function() {
+		var index = self.$$watchers.indexOf(watcher);
+		if (index >= 0) {
+			self.$$watchers.splice(index, 1);
+			self.$$lastDirtyWatch = null;
+		}
+	};
 };
 
 Scope.prototype.$$digestOnce = function() {
 	var self = this;
 	var newValue, oldValue, dirty;
-	_.forEach(this.$$watchers, function(watcher) {
+	_.forEachRight(this.$$watchers, function(watcher) {
+
 		try {
-			newValue = watcher.watchFn(self);
-			oldValue = watcher.last;
-			if (!self.$$areEqual(newValue, oldValue, watcher.valueEq)) {
-				self.$$lastDirtyWatch = watcher;
-				watcher.last = (watcher.valueEq ? _.cloneDeep(newValue) : newValue);
-				watcher.listenerFn(newValue, (oldValue === initWatchVal ? newValue : oldValue),
-					self);
-				dirty = true;
-			} else if (self.$$lastDirtyWatch === watcher) {
-				return false;
+			if (watcher) {
+				newValue = watcher.watchFn(self);
+				oldValue = watcher.last;
+				if (!self.$$areEqual(newValue, oldValue, watcher.valueEq)) {
+					self.$$lastDirtyWatch = watcher;
+					watcher.last = (watcher.valueEq ? _.cloneDeep(newValue) : newValue);
+					watcher.listenerFn(newValue, (oldValue === initWatchVal ? newValue : oldValue),
+						self);
+					dirty = true;
+				} else if (self.$$lastDirtyWatch === watcher) {
+					return false;
+				}
 			}
 		} catch (e) {
 
@@ -165,4 +175,18 @@ Scope.prototype.$$flushApplyAsync = function() {
 
 Scope.prototype.$$postDigest = function(fn) {
 	this.$$postDigestQueue.push(fn);
+};
+
+Scope.prototype.$watchGroup = function(watchFns, listenerFn) {
+	var self = this;
+	var newValues = new Array(watchFns.length);
+	var oldValues = new Array(watchFns.length);
+
+	_.forEach(watchFns, function(watchFn, i) {
+		self.$watch(watchFn, function(newValue, oldValue) {
+			newValues[i] = newValue;
+			oldValues[i] = oldValue;
+			listenerFn(newValues, oldValues, self);
+		});
+	});
 };
