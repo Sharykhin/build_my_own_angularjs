@@ -1071,6 +1071,37 @@ describe("Scope", function() {
 
 		}); //end
 
+		it("shadows a parent's property with the same name", function() {
+			var parent = new Scope();
+			var child = parent.$new();
+
+			parent.name = 'Joe';
+			child.name = 'Jill';
+
+			expect(child.name).toBe('Jill');
+			expect(parent.name).toBe('Joe');
+		}); // end
+
+		if ("does not digest its parent(s)", function() {
+				var parent = new Scope();
+				var child = parent.$new();
+
+				parent.aValue = 'abc';
+				parent.$watch(
+					function(scope) {
+						return scope.aValue;
+					},
+					function(newValue, oldValue, scope) {
+						scope.aValueWas = newValue;
+					}
+				);
+
+				child.$digest();
+				expect(child.aValueWas).toBeUndefined();
+
+
+			}); // end
+
 
 
 	}); // end describe inheritance
