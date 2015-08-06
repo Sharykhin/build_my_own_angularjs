@@ -182,11 +182,47 @@ Scope.prototype.$watchGroup = function(watchFns, listenerFn) {
 	var newValues = new Array(watchFns.length);
 	var oldValues = new Array(watchFns.length);
 
-	_.forEach(watchFns, function(watchFn, i) {
-		self.$watch(watchFn, function(newValue, oldValue) {
+	var changeReactionScheduled = false;
+	var firstRun = true;
+
+	if (watchFns.length === 0) {
+		var shouldCall = true;
+		self.$evalAsync(function() {
+			if (shouldCall) {
+				listenerFn(newValues, oldValues, self);
+			}
+		});
+		return function() {
+			shouldCall = false;
+		};
+	}
+
+	function watchGroupListener() {
+		if (firstRun) {
+			firstRun = false;
+			listenerFn(newValues, newValues, self);
+		} else {
+			listenerFn(newValues, oldValues, self);
+		}
+		changeReactionScheduled = false;
+	}
+
+	var destroyFunctions = _.map(watchFns, function(watchFn, i) {
+
+		return self.$watch(watchFn, function(newValue, oldValue) {
 			newValues[i] = newValue;
 			oldValues[i] = oldValue;
-			listenerFn(newValues, oldValues, self);
+			if (!changeReactionScheduled) {
+				changeReactionScheduled = true;
+				self.$evalAsync(watchGroupListener);
+			}
+
 		});
 	});
+
+	return function() {
+		_.forEach(destroyFunctions, function(destroyFunction) {
+			destroyFunction();
+		});
+	};
 };

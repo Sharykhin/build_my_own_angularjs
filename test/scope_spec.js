@@ -847,5 +847,134 @@ describe("Scope", function() {
 			expect(gotOldValues).toEqual([1, 2]);
 		}); // end
 
+		it("only calls listener once per digest", function() {
+			var counter = 0;
+			scope.aValue = 1;
+			scope.anotherValue = 2;
+
+			scope.$watchGroup([
+					function(scope) {
+						return scope.aValue;
+					},
+					function(scope) {
+						return scope.anotherValue;
+					}
+				],
+				function(newValues, oldValues, scope) {
+					counter++;
+				}
+			);
+
+			scope.$digest();
+
+			expect(counter).toBe(1);
+
+		}); // end
+
+		it("uses the same array of old and new values on first run", function() {
+			var gotNewValues, gotOldValues;
+
+			scope.aValue = 1;
+			scope.anotherValue = 2;
+
+			scope.$watchGroup([
+				function(scope) {
+					return scope.aValue;
+				},
+				function(scope) {
+					return scope.anotherValue;
+				}
+			], function(newValues, oldValues, scope) {
+				gotNewValues = newValues;
+				gotOldValues = oldValues;
+			});
+
+			scope.$digest();
+			expect(gotNewValues).toBe(gotOldValues);
+		}); // end
+
+		it("uses different arrays for old and new values on subsequent runs", function() {
+			var gotNewValues, gotOldValues;
+
+			scope.aValue = 1;
+			scope.anotherValue = 2;
+
+			scope.$watchGroup([
+				function(scope) {
+					return scope.aValue;
+				},
+				function(scope) {
+					return scope.anotherValue;
+				}
+			], function(newValues, oldValues, scope) {
+				gotNewValues = newValues;
+				gotOldValues = oldValues;
+			});
+
+			scope.$digest();
+
+			scope.anotherValue = 3;
+			scope.$digest();
+			expect(gotNewValues).toEqual([1, 3]);
+			expect(gotOldValues).toEqual([1, 2]);
+		}); // end
+
+
+		it("calls the listener once when the watch array is empty", function() {
+			var gotNewValues, gotOldValues;
+
+			scope.$watchGroup([], function(newValues, oldValues, scope) {
+				gotNewValues = newValues;
+				gotOldValues = oldValues;
+			});
+
+			scope.$digest();
+
+			expect(gotNewValues).toEqual([]);
+			expect(gotOldValues).toEqual([]);
+
+		}); // end
+
+		it("can be deregistered", function() {
+			var counter = 0;
+			scope.aValue = 1;
+			scope.anotherValue = 2;
+
+			var destroyGroup = scope.$watchGroup([
+				function(scope) {
+					return scope.aValue;
+				},
+				function(scope) {
+					return scope.anotherValue;
+				}
+			], function(newValues, oldValues, scope) {
+				counter++;
+			});
+
+			scope.$digest();
+
+			scope.anotherValue = 3;
+			destroyGroup();
+			scope.$digest();
+
+			expect(counter).toEqual(1);
+		}); // end
+
+		it("does not call the zero-watch listener when deregistered first", function() {
+
+			var counter = 0;
+
+			var destroyGroup = scope.$watchGroup([], function(newValue, oldValues, scope) {
+				counter++;
+			});
+
+			destroyGroup();
+			scope.$digest();
+
+			expect(counter).toEqual(0);
+
+		}); // end
+
+
 	}); //end describe $watchGroup
 });
