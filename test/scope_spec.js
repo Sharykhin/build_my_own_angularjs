@@ -1137,6 +1137,50 @@ describe("Scope", function() {
 
 		}); // end
 
+		it("digests from root on $apply", function() {
+			var parent = new Scope();
+			var child = parent.$new();
+			var child2 = child.$new();
+
+			parent.aValue = 'abc';
+			parent.counter = 0;
+			parent.$watch(
+				function(scope) {
+					return scope.aValue;
+				},
+				function(newValue, oldValue, scope) {
+					scope.counter++;
+				}
+			);
+
+			child2.$apply(function(scope) {});
+			expect(parent.counter).toBe(1);
+		}); // end
+
+
+		it("schedules a digest from root on $evalAsync", function(done) {
+			var parent = new Scope();
+			var child = parent.$new();
+			var child2 = child.$new();
+
+			parent.aValue = 'abc';
+			parent.counter = 0;
+			parent.$watch(
+				function(scope) {
+					return scope.aValue;
+				},
+				function(newValue, oldValue, scope) {
+					scope.counter++;
+				}
+			);
+
+			child2.$evalAsync(function(scope) {});
+			setTimeout(function() {
+				expect(parent.counter).toBe(1);
+				done();
+			}, 50);
+		}); //end
+
 
 
 	}); // end describe inheritance
