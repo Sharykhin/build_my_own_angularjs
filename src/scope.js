@@ -282,3 +282,13 @@ Scope.prototype.$destroy = function() {
 		siblings.splice(indexIfThis, 1);
 	}
 };
+
+Scope.prototype.$wacthCollection = function(watchFn, listenerFn) {
+	var internalWatchFn = function(scope) {
+
+	};
+
+	var internalListenerFn = function() {};
+
+	return this.$watch(internalWatchFn, internalListenerFn);
+};
