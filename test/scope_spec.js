@@ -1182,6 +1182,55 @@ describe("Scope", function() {
 		}); //end
 
 
+		it("does not have access to parent attributes when isolated", function() {
+			var parent = new Scope();
+			var child = parent.$new(true);
+
+			parent.aValue = 'abc';
+
+			expect(child.aValue).toBeUndefined();
+
+		}); // end
+
+		it("cannot watch parent attributes when isolated", function() {
+
+			var parent = new Scope();
+			var child = parent.$new(true);
+
+			parent.aValue = 'abc';
+			child.$watch(
+				function(scope) {
+					return scope.aValue;
+				},
+				function(newValue, oldValue, scope) {
+					scope.aValueWas = newValue;
+				}
+			);
+
+			child.$digest();
+
+			expect(child.aValueWas).toBeUndefined();
+
+		}); // end
+
+		it("digests its isolated children", function() {
+			var parent = new Scope();
+			var child = parent.$new(true);
+
+			child.aValue = 'abc';
+			child.$watch(
+				function(scope) {
+					return scope.aValue;
+				},
+				function(newValue, oldValue, scope) {
+					scope.aValueWas = newValue;
+				}
+			);
+
+			parent.$digest();
+			expect(child.aValueWas).toBe('abc');
+
+		}); // end
 
 	}); // end describe inheritance
 });
