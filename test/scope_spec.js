@@ -1310,7 +1310,7 @@ describe("Scope", function() {
 
 		}); // end
 
-		it("can take some other scope as the parent", function(){
+		it("can take some other scope as the parent", function() {
 			var prototypeParent = new Scope();
 
 			var hierarchyParent = new Scope();
@@ -1321,16 +1321,51 @@ describe("Scope", function() {
 			expect(child.a).toBe(42);
 
 			child.counter = 0;
-			child.$watch(function(scope){ scope.counter++; });
+			child.$watch(function(scope) {
+				scope.counter++;
+			});
 
 			prototypeParent.$digest();
 			expect(child.counter).toBe(0);
-			
+
 			hierarchyParent.$digest();
 			expect(child.counter).toBe(2);
 
 
 		}); //end
+
+		it("is no longer digested when $destroy has been called", function() {
+			var parent = new Scope();
+			var child = parent.$new();
+
+			child.aValue = [1, 2, 3];
+			child.counter = 0;
+
+			child.$watch(
+				function(scope) {
+					return scope.aValue;
+				},
+				function(newValue, oldValue, scope) {
+					scope.counter++;
+				},
+				true
+			);
+
+			parent.$digest();
+			expect(child.counter).toBe(1);
+
+			child.aValue.push(4);
+			parent.$digest();
+			expect(child.counter).toBe(2);
+
+			child.$destroy();
+			child.aValue.push(5);
+			parent.$digest();
+			expect(child.counter).toBe(2);
+
+
+
+		});
 
 
 
