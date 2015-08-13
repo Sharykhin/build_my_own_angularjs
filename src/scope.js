@@ -14,6 +14,7 @@ function Scope() {
 	this.$$applyAsyncId = null;
 	this.$root = this;
 	this.$$postDigestQueue = [];
+	this.$$listeners = {};
 	this.$$children = [];
 }
 
@@ -258,6 +259,7 @@ Scope.prototype.$new = function(isolated, parent) {
 
 	parent.$$children.push(child);
 	child.$$watchers = [];
+	child.$$listeners = {};
 	child.$$children = [];
 	child.$parent = parent;
 	return child;
@@ -380,4 +382,33 @@ Scope.prototype.$watchCollection = function(watchFn, listenerFn) {
 	};
 
 	return this.$watch(internalWatchFn, internalListenerFn);
+};
+
+Scope.prototype.$on = function(eventName, listener) {
+	var listeners = this.$$listeners[eventName];
+	if (!listeners) {
+		this.$$listeners[eventName] = listeners = [];
+	}
+	listeners.push(listener);
+};
+
+Scope.prototype.$emit = function(eventName) {
+	var additionalArgs = _.rest(arguments);
+	this.$$fireEventOnScope(eventName, additionalArgs);
+};
+
+Scope.prototype.$broadcast = function(eventName) {
+	var additionalArgs = _.rest(arguments);
+	this.$$fireEventOnScope(eventName, additionalArgs);
+};
+
+Scope.prototype.$$fireEventOnScope = function(eventName, additionalArgs) {
+	var event = {
+		name: eventName
+	};
+	var listenerArgs = [event].concat(additionalArgs);
+	var listeners = this.$$listeners[eventName] || [];
+	_.forEach(listeners, function(listener) {
+		listener.apply(null, listenerArgs);
+	});
 };
