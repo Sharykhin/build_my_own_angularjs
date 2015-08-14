@@ -283,6 +283,7 @@ Scope.prototype.$destroy = function() {
 	var siblings = this.$parent.$$children;
 	var indexIfThis = siblings.indexOf(this);
 	if (indexIfThis >= 0) {
+		this.$broadcast('$destroy');
 		siblings.splice(indexIfThis, 1);
 	}
 };
@@ -406,6 +407,9 @@ Scope.prototype.$emit = function(eventName) {
 		targetScope: this,
 		stopPropogation: function() {
 			propogationStopped = true;
+		},
+		preventDefault: function() {
+			event.defaultPrevented = true;
 		}
 	};
 	var listenerArgs = [event].concat(_.rest(arguments));
@@ -423,7 +427,10 @@ Scope.prototype.$emit = function(eventName) {
 Scope.prototype.$broadcast = function(eventName) {
 	var event = {
 		name: eventName,
-		targetScope: this
+		targetScope: this,
+		preventDefault: function() {
+			event.defaultPrevented = true;
+		}
 	};
 	var listenerArgs = [event].concat(_.rest(arguments));
 	this.$$everyScope(function(scope) {
@@ -442,7 +449,12 @@ Scope.prototype.$$fireEventOnScope = function(eventName, listenerArgs) {
 		if (listeners[i] === null) {
 			listeners.splice(i, 1);
 		} else {
-			listeners[i].apply(null, listenerArgs);
+			try {
+				listeners[i].apply(null, listenerArgs);
+			} catch (e) {
+				console.error(e);
+
+			}
 			i++;
 		}
 	}
