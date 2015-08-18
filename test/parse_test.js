@@ -93,5 +93,20 @@ describe("parse", function() {
 		}).toThrow();
 	}); // end
 
+	it("will parse null", function() {
+		var fn = parse('null');
+		expect(fn()).toBe(null);
+	}); // end
+
+	it('will parse true', function() {
+		var fn = parse('true');
+		expect(fn()).toBe(true);
+	}); // end
+
+	it('will parse false', function() {
+		var fn = parse('false');
+		expect(fn()).toBe(false);
+	}); // end
+
 
 }); // end describe parse
