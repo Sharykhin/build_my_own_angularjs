@@ -56,5 +56,42 @@ describe("parse", function() {
 		}).toThrow();
 	}); // end
 
+	it("can parse a string in single quotes", function() {
+		var fn = parse("'abc'");
+		expect(fn()).toEqual('abc');
+	}); // end
+
+	it("can parse a string in double quotes", function() {
+		var fn = parse('"abc"');
+		expect(fn()).toEqual('abc');
+	}); // end
+
+	it("wil not parse a string with mismatching quotes", function() {
+		expect(function() {
+			parse('"abc\'');
+		}).toThrow();
+	}); // end
+
+	it("can parse a string with single quotes inside", function() {
+		var fn = parse("'a\\\'b'");
+		expect(fn()).toEqual('a\'b');
+	}); // end
+
+	it("can parse a string with double quotes inside", function() {
+		var fn = parse('"a\\\"b"');
+		expect(fn()).toEqual('a\"b');
+	}); // end
+
+	it("will [arse a string with unicode escapes", function() {
+		var fn = parse('"\\u00A0"');
+		expect(fn()).toEqual('\u00A0');
+	}); // end
+
+	it("will not parse a string with invalid unicode escapes", function() {
+		expect(function() {
+			parse('"\\u00T0"');
+		}).toThrow();
+	}); // end
+
 
 }); // end describe parse
