@@ -32,11 +32,11 @@ Lexer.prototype.lex = function(text) {
 	while (this.index < this.text.length) {
 		this.ch = this.text.charAt(this.index);
 		if (this.isNumber(this.ch) ||
-			(this.ch === '.' && this.isNumber(this.peek()))) {
+			(this.is('.') && this.isNumber(this.peek()))) {
 			this.readNumber();
-		} else if (this.ch === '\'' || this.ch === '"') {
+		} else if (this.is('\'"')) {
 			this.readString(this.ch);
-		} else if (this.ch === '[' || this.ch === ']' || this.ch === ',') {
+		} else if (this.is('[],{}:')) {
 			this.tokens.push({
 				text: this.ch
 			});
@@ -53,6 +53,9 @@ Lexer.prototype.lex = function(text) {
 	return this.tokens;
 };
 
+Lexer.prototype.is = function(chs) {
+	return chs.indexOf(this.ch) >= 0;
+};
 
 Lexer.prototype.readIdent = function() {
 	var text = '';
@@ -238,6 +241,9 @@ AST.prototype.arrayDeclaration = function() {
 	var elements = [];
 	if (!this.peek(']')) {
 		do {
+			if (this.peek(']')) {
+				break;
+			}
 			elements.push(this.primary());
 		} while (this.expect(','));
 	}
@@ -246,8 +252,7 @@ AST.prototype.arrayDeclaration = function() {
 		type: AST.ArrayExpression,
 		elements: elements
 	};
-}; // end
-
+};
 
 AST.prototype.consume = function(e) {
 	var token = this.expect(e);
