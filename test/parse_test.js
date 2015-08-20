@@ -108,5 +108,16 @@ describe("parse", function() {
 		expect(fn()).toBe(false);
 	}); // end
 
+	it("ignores whitespace", function() {
+		var fn = parse(' \n42 ');
+		expect(fn()).toEqual(42);
+	}); // end
+
+	it("will parse an empty array", function() {
+		var fn = parse('[]');
+		expect(fn()).toEqual([]);
+	}); // end
+
+
 
 }); // end describe parse
