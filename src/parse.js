@@ -70,7 +70,8 @@ Lexer.prototype.readIdent = function() {
 	}
 
 	var token = {
-		text: text
+		text: text,
+		identifier: true
 	};
 	this.tokens.push(token);
 };
@@ -182,6 +183,9 @@ function AST(lexer) {
 AST.Program = 'Program';
 AST.Literal = 'Literal';
 AST.ArrayExpression = 'ArrayExpression';
+AST.ObjectExpression = 'ObjectExpression';
+AST.Property = 'Property';
+AST.Identifier = 'Identifier';
 
 AST.prototype.constants = {
 	'null': {
@@ -213,12 +217,45 @@ AST.prototype.program = function() {
 AST.prototype.primary = function() {
 	if (this.expect('[')) {
 		return this.arrayDeclaration();
+	} else if (this.expect('{')) {
+		return this.object();
 	} else if (this.constants.hasOwnProperty(this.tokens[0].text)) {
 		return this.constants[this.consume().text];
 	} else {
 		return this.constant();
 	}
 
+};
+
+AST.prototype.object = function() {
+	var properties = [];
+	if (!this.peek('}')) {
+		do {
+			var property = {
+				type: AST.Property
+			};
+			if (this.peek().identifier) {
+				property.key = this.identifier();
+			} else {
+				property.key = this.constant();
+			}
+			this.consume(':');
+			property.value = this.primary();
+			properties.push(property);
+		} while (this.expect(','));
+	}
+	this.consume('}');
+	return {
+		type: AST.ObjectExpression,
+		properties: properties
+	};
+};
+
+AST.prototype.identifier = function() {
+	return {
+		type: AST.Identifier,
+		name: this.consume().text
+	};
 };
 
 AST.prototype.peek = function(e) {
@@ -299,6 +336,16 @@ ASTCompiler.prototype.recurse = function(ast) {
 				return this.recurse(element);
 			}, this);
 			return '[' + elements.join(',') + ']';
+		case AST.ObjectExpression:
+			var properties = _.map(ast.properties, function(property) {
+				var key = property.key.type === AST.Identifier ?
+					property.key.name :
+					this.escape(property.key.value);
+
+				var value = this.recurse(property.value);
+				return key + ':' + value;
+			}, this);
+			return '{' + properties.join(',') + '}';
 	}
 };
 
