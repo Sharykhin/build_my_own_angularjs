@@ -172,6 +172,24 @@ describe("parse", function() {
 		expect(fn()).toBeUndefined();
 	}); // end
 
+	it("looks up a 2-park identified path from the scope", function() {
+		var fn = parse('aKey.anotherKey');
+		expect(fn({
+			aKey: {
+				anotherKey: 42
+			}
+		})).toBe(42);
+		expect(fn({
+			aKey: {}
+		})).toBeUndefined();
+		expect(fn({})).toBeUndefined();
+	}); // end
+
+	it('looks up a member from an object', function() {
+		var fn = parse('{aKey: 42}.aKey');
+		expect(fn()).toBe(42);
+	}); // end
+
 
 
 }); // end describe parse
