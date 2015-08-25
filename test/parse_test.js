@@ -247,7 +247,35 @@ describe("parse", function() {
 			aKey: {}
 		};
 		expect(fn(scope, locals)).toBeUndefined();
-	});
+	}); // end
+
+	it("parses a simple computed property access", function() {
+		var fn = parse('aKey["anotherKey"]');
+		expect(fn({
+			aKey: {
+				anotherKey: 42
+			}
+		})).toBe(42);
+	}); // end
+
+	it("parses a computed numeric array access", function() {
+		var fn = parse('anArray[1]');
+		expect(fn({
+			anArray: [1, 2, 3]
+		})).toBe(2);
+	}); // end
+
+	it("parses comuted access with another access as property", function() {
+		var fn = parse('lock[keys["aKey"]]');
+		expect(fn({
+			keys: {
+				aKey: 'theKey'
+			},
+			lock: {
+				theKey: 42
+			}
+		})).toBe(42);
+	}); // end
 
 
 
