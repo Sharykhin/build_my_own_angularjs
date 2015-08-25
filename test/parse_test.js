@@ -277,6 +277,34 @@ describe("parse", function() {
 		})).toBe(42);
 	}); // end
 
+	it('parses a functon call', function() {
+		var fn = parse('aFunction()');
+		expect(fn({
+			aFunction: function() {
+				return 42;
+			}
+		})).toBe(42);
+	}); // end
+
+	it('parses a function call with a single number argument', function() {
+		var fn = parse('aFunction(42');
+		expect(fn({
+			aFunction: function(n) {
+				return n;
+			}
+		})).toBe(42);
+	}); // end
+
+	it('parses a function call with a single identified argument', function() {
+		var fn = parse('aFunction(n)');
+		expect(fn({
+			n: 42,
+			aFunction: function(arg) {
+				return arg;
+			}
+		})).toBe(42);
+	}); // end
+
 
 
 }); // end describe parse
