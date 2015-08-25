@@ -214,6 +214,41 @@ describe("parse", function() {
 		expect(fn()).toBeUndefined();
 	}); // end
 
+	it("uses locals instead of scope when there is a matching key", function() {
+		var fn = parse('aKey');
+		var scope = {
+			aKey: 42
+		};
+		var locals = {
+			aKey: 43
+		};
+		expect(fn(scope, locals)).toBe(43);
+	}); // end
+
+	it("does not use locals instead of scope when no matching key", function() {
+		var fn = parse('aKey');
+		var scope = {
+			aKey: 42
+		};
+		var locals = {
+			otherKey: 43
+		};
+		expect(fn(scope, locals)).toBe(42);
+	}); // end
+
+	it("uses locals instead if scope when the first part matches", function() {
+		var fn = parse('akey.anotherKey');
+		var scope = {
+			aKey: {
+				anotherKey: 42
+			}
+		};
+		var locals = {
+			aKey: {}
+		};
+		expect(fn(scope, locals)).toBeUndefined();
+	});
+
 
 
 }); // end describe parse
