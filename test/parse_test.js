@@ -287,7 +287,7 @@ describe("parse", function() {
 	}); // end
 
 	it('parses a function call with a single number argument', function() {
-		var fn = parse('aFunction(42');
+		var fn = parse('aFunction(42)');
 		expect(fn({
 			aFunction: function(n) {
 				return n;
@@ -295,15 +295,54 @@ describe("parse", function() {
 		})).toBe(42);
 	}); // end
 
-	it('parses a function call with a single identified argument', function() {
-		var fn = parse('aFunction(n)');
+	if ('parses a function call with a single function call argument', function() {
+			var fn = parse('aFunction(argFn())');
+			expect(fn(({
+				argFn: _.constant(42),
+				aFunction: function(arg) {
+					return arg;
+				}
+			}))).toBe(42);
+		}); // end
+
+	it('parses a function call with multiple arguments', function() {
+		var fn = parse('aFunction(37, n, argFn())');
 		expect(fn({
-			n: 42,
-			aFunction: function(arg) {
-				return arg;
+			n: 3,
+			argFn: _.constant(2),
+			aFunction: function(a1, a2, a3) {
+				return a1 + a2 + a3;
 			}
 		})).toBe(42);
 	}); // end
+
+	it('cals methods accessed as computed properties', function() {
+		var scope = {
+			anObject: {
+				aMember: 42,
+				aFunction: function() {
+					return this.aMember;
+				}
+			}
+		};
+
+		var fn = parse('anObject["aFunction"]()');
+		expect(fn(scope)).toBe(42);
+	}); // end
+
+	it('calls methods accessed as non-computed properties', function() {
+		var scope = {
+			anObject: {
+				aMember: 42,
+				aFunction: function() {
+					return this.aMember;
+				}
+			}
+		};
+
+		var fn = parse('anObject.aFunction()');
+		expect(fn(scope)).toBe(42);
+	});
 
 
 
