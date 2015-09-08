@@ -342,7 +342,80 @@ describe("parse", function() {
 
 		var fn = parse('anObject.aFunction()');
 		expect(fn(scope)).toBe(42);
-	});
+	}); // end
+
+	it('binds bare functions to the scope', function() {
+		var scope = {
+			aFunction: function() {
+				return this;
+			}
+		};
+
+		var fn = parse('aFunction()');
+		expect(fn(scope)).toBe(scope);
+	}); // end
+
+	it('binds bare function on locals to the locals', function() {
+		var scope = {};
+		var locals = {
+			aFunction: function() {
+				return this;
+			}
+		};
+
+		var fn = parse('aFunction()');
+		expect(fn(scope, locals)).toBe(locals);
+	}); // end
+
+	it('parses a simple attribute assigment', function() {
+		var fn = parse('anAttribute = 42');
+		var scope = {};
+		fn(scope);
+		expect(scope.anAttribute).toBe(42);
+	}); // end
+
+	it('can assign any primary expression', function() {
+		var fn = parse('anAttribute = aFunction()');
+		var scope = {
+			aFunction: _.constant(42)
+		};
+		fn(scope);
+		expect(scope.anAttribute).toBe(42);
+	}); // end
+
+	it('can assign a computed object property', function() {
+		var fn = parse('anObject["anAttribute"] = 42');
+		var scope = {
+			anObject: {}
+		};
+		fn(scope);
+		expect(scope.anObject.anAttribute).toBe(42);
+	}); // end
+
+	it('can assign a non-computed object property', function() {
+		var fn = parse('anObject.anAttribute = 42');
+		var scope = {
+			anObject: {}
+		};
+		fn(scope);
+		expect(scope.anObject.anAttribute).toBe(42);
+	}); //end
+
+	it('can assign a nested object property', function() {
+		var fn = parse('anArray[0].anAttribute = 42');
+		var scope = {
+			anArray: [{}]
+		};
+		fn(scope);
+		expect(scope.anArray[0].anAttribute).toBe(42);
+	}); //end
+
+	it('creates the objects in the assignment path that do not exist', function() {
+		var fn = parse('name["nested"].property.path = 42');
+		var scope = {};
+		fn(scope);
+		expect(scope.name.nested.property.path).toBe(42);
+	}); //end
 
 
 
