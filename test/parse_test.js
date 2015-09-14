@@ -1,5 +1,5 @@
 /* jshint globalstrict: true */
-/* global parse: false */
+/* global parse: false, register: false */
 'use strict';
 
 describe("parse", function() {
@@ -504,6 +504,96 @@ describe("parse", function() {
 			});
 		}).toThrow();
 	}); // end
+
+	it('does not allow calling methods on window', function() {
+		var fn = parse('wnd.scrollTo(0)');
+		expect(function() {
+			fn({
+				wnd: window
+			});
+		}).toThrow();
+	});
+
+	it('does not allow functions to return window', function() {
+		var fn = parse('getWnd()');
+		expect(function() {
+			fn({
+				getWnd: _.constant(window)
+			});
+		}).toThrow();
+	});
+
+	it('does not allow assigning window', function() {
+		var fn = parse('wnd = anObject');
+		expect(function() {
+			fn({
+				anObject: window
+			});
+		}).toThrow();
+	});
+
+	it('does not allow referencing window', function() {
+		var fn = parse('wnd');
+		expect(function() {
+			fn({
+				wnd: window
+			});
+		}).toThrow();
+	});
+
+	it('does not allow calling functions on DOM elements', function() {
+		var fn = parse('el.setAttribute("evil", "true")');
+		expect(function() {
+			fn({
+				el: document.documentElement
+			});
+		}).toThrow();
+	});
+
+	it('does not allow calling the aliased function constructor', function() {
+		var fn = parse('fnConstructor("return window;")');
+		expect(function() {
+			fn({
+				fnConstructor: (function() {}).constructor
+			});
+		}).toThrow();
+	});
+
+	it('does not allow calling functions on Object', function() {
+		var fn = parse('obj.create({})');
+		expect(function() {
+			fn({
+				obj: Object
+			});
+		}).toThrow();
+	});
+
+	it('does not allow calling call', function() {
+		var fn = parse('fun.call(obj)');
+		expect(function() {
+			fn({
+				fun: function() {},
+				obj: {}
+			});
+		}).toThrow();
+	});
+
+	it('does not allow calling apply', function() {
+		var fn = parse('fun.apply(obj)');
+		expect(function() {
+			fn({
+				fun: function() {},
+				obj: {}
+			});
+		}).toThrow();
+	});
+
+	it('parses a unary +', function() {
+		expect(parse('+42')()).toBe(42);
+		expect(parse('+a')({
+			a: 42
+		})).toBe(42);
+	});
 
 
 }); // end describe parse
