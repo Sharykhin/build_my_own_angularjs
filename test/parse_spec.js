@@ -788,5 +788,52 @@ describe("parse", function() {
 		expect(parse('a = 1; b = 2; a + b')({})).toBe(3);
 	});
 
+	it('can parse filter expressions', function() {
+		register('upcase', function() {
+			return function(str) {
+				return str.toUpperCase();
+			};
+		});
+		var fn = parse('aString | upcase');
+		expect(fn({
+			aString: 'Hello'
+		})).toEqual('HELLO');
+	});
+
+	it('can parse filter chain expressions', function() {
+		register('upcase', function() {
+			return function(s) {
+				return s.toUpperCase();
+			};
+		});
+		register('exclamate', function() {
+			return function(s) {
+				return s + '!';
+			};
+		});
+		var fn = parse('"hello" | upcase | exclamate');
+		expect(fn()).toEqual('HELLO!');
+	});
+
+	it('can pass an additional argument to filters', function() {
+		register('repeat', function() {
+			return function(s, times) {
+				return _.repeat(s, times);
+			};
+		});
+		var fn = parse('"hello" | repeat:3');
+		expect(fn()).toEqual('hellohellohello');
+	});
+
+	it('can pass several additional arguments to filters', function() {
+		register('surround', function() {
+			return function(s, left, right) {
+				return left + s + right;
+			};
+		});
+		var fn = parse('"hello" | surround:"*":"!"');
+		expect(fn()).toEqual('*hello!');
+	});
+
 
 }); // end describe parse
